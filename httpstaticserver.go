@@ -50,6 +50,8 @@ type HTTPStaticServer struct {
 	PlistProxy      string
 	GoogleTrackerID string
 	AuthType        string
+	user		string
+	password	string
 
 	indexes []IndexFileItem
 	m       *mux.Router
@@ -416,11 +418,27 @@ func (s *HTTPStaticServer) genPlistLink(httpPlistLink string) (plistUrl string, 
 	if pp == "" {
 		pp = defaultPlistProxy
 	}
-	resp, err := http.Get(httpPlistLink)
+    var resp *http.Response
+    if s.AuthType == "http" {
+        client := &http.Client{}
+        var req *http.Request
+        req, err = http.NewRequest("GET", httpPlistLink, nil)
+        if err != nil {
+            return
+        }
+        req.SetBasicAuth(s.user, s.password)
+        resp, err = client.Do(req)
 	if err != nil {
-		return
+	    return
 	}
-	defer resp.Body.Close()
+    } else if s.AuthType == "" {
+        resp, err = http.Get(httpPlistLink)
+
+    }
+    if err != nil {
+        return
+    }
+    defer resp.Body.Close()
 
 	data, _ := ioutil.ReadAll(resp.Body)
 	retData, err := http.Post(pp, "text/xml", bytes.NewBuffer(data))

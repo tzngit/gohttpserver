@@ -14,12 +14,15 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	_ "net/http/pprof"
+	"time"
 
 	"github.com/alecthomas/kingpin"
 	accesslog "github.com/codeskyblue/go-accesslog"
 	"github.com/go-yaml/yaml"
 	"github.com/goji/httpauth"
 	"github.com/gorilla/handlers"
+	"github.com/gorilla/context"
 	_ "github.com/shurcooL/vfsgen"
 )
 
@@ -134,6 +137,14 @@ func parseFlags() error {
 	return nil
 }
 
+func clearStateRequest() {
+    for {
+	time.Sleep(3 * time.Minute)
+	context.Purge(45)
+	log.Println("context purge!")
+    }
+}
+
 func main() {
 	if err := parseFlags(); err != nil {
 		log.Fatal(err)
@@ -164,7 +175,7 @@ func main() {
 		log.Printf("plistproxy: %s", strconv.Quote(ss.PlistProxy))
 	}
 	
-	var hdlr http.Handler = ss
+	var hdlr http.Handler = context.ClearHandler(ss)
 
 	hdlr = accesslog.NewLoggingHandler(hdlr, logger)
 
@@ -174,6 +185,8 @@ func main() {
 	case "http":
 		if len(userpass) == 2 {
 			user, pass := userpass[0], userpass[1]
+			ss.user = user
+			ss.password = pass
 			hdlr = httpauth.SimpleBasicAuth(user, pass)(hdlr)
 		}
 	case "openid":
@@ -211,6 +224,7 @@ func main() {
 	_, port, _ := net.SplitHostPort(gcfg.Addr)
 	log.Printf("listening on %s, local address http://%s:%s\n", strconv.Quote(gcfg.Addr), getLocalIP(), port)
 
+	go clearStateRequest()
 	var err error
 	if gcfg.Key != "" && gcfg.Cert != "" {
 		err = http.ListenAndServeTLS(gcfg.Addr, gcfg.Cert, gcfg.Key, nil)

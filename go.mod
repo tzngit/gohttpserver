@@ -12,8 +12,9 @@ require (
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/goji/httpauth v0.0.0-20160601135302-2da839ab0f4d
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
+	github.com/gorilla/context v1.1.1
 	github.com/gorilla/handlers v1.4.0
-	github.com/gorilla/mux v1.6.2
+	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/sessions v1.1.3
 	github.com/nwaples/rardecode v1.0.0 // indirect
 	github.com/pkg/errors v0.8.0
